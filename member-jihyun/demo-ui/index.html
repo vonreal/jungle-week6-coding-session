@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini SQL Processor Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <section class="hero-card">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Week 6 Coding Session</p>
+          <h1>Mini SQL Processor</h1>
+          <p class="subtitle">CLI 실행 흐름을 데모 보드로 표현했습니다.</p>
+        </div>
+        <div class="badges">
+          <span class="badge success">Public 6/6 PASS</span>
+          <span class="badge neutral">1조</span>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="데모 SQL 템플릿">
+        <button class="demo-btn is-active" data-scenario="insert">INSERT 템플릿</button>
+        <button class="demo-btn" data-scenario="select">SELECT 템플릿</button>
+        <button class="demo-btn" data-scenario="error">에러 템플릿</button>
+      </section>
+    </section>
+
+    <section class="grid">
+      <article class="card sql-card">
+        <h2>SQL Input</h2>
+        <textarea id="sqlInput" class="terminal-input" spellcheck="false" aria-label="SQL 입력"></textarea>
+        <div class="sql-actions">
+          <button id="runBtn" class="action-btn primary">Run SQL</button>
+          <button id="clearBtn" class="action-btn">Clear Output</button>
+          <button id="resetBtn" class="action-btn">Reset Data</button>
+        </div>
+        <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+      </article>
+
+      <article class="card output-card">
+        <h2>Execution Output</h2>
+        <div class="split-output">
+          <div>
+            <h3>stdout</h3>
+            <pre id="stdoutOutput" class="terminal-block stdout"></pre>
+          </div>
+          <div>
+            <h3>stderr</h3>
+            <pre id="stderrOutput" class="terminal-block stderr"></pre>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
