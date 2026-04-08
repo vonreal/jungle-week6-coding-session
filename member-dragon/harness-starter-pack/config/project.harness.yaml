@@ -1,0 +1,85 @@
+project:
+  name: "mini_sql_parser"
+  domain: "developer-tools"
+  primary_language: "C"
+  repo_type: "application"
+
+workflow:
+  stages:
+    - discover
+    - plan
+    - implement
+    - verify
+    - review
+  automation:
+    allow_auto_progress: true
+    pause_after_stages:
+      - plan
+      - review
+  human_in_loop:
+    require_approval_for:
+      - destructive_file_ops
+      - production_db_changes
+      - deployment
+      - secret_access
+
+docs:
+  required:
+    - AGENTS.md
+    - ARCHITECTURE.md
+    - docs/design-docs/index.md
+    - docs/product-specs/index.md
+    - docs/exec-plans/active/current-plan.md
+  optional:
+    - docs/design-docs/domain-rules.md
+    - docs/design-docs/compliance.md
+    - docs/product-specs/non-functional-requirements.md
+    - docs/product-specs/launch-checklist.md
+  custom_templates:
+    - name: localization_notes
+      path: docs/product-specs/localization.md
+      required: false
+    - name: data_contracts
+      path: docs/design-docs/data-contracts.md
+      required: false
+
+outputs:
+  required_sections:
+    - summary
+    - changed_files
+    - validation
+    - residual_risks
+  optional_sections:
+    - rollout_notes
+    - compliance_notes
+    - localization_notes
+
+quality_gates:
+  require_plan_before_implementation: true
+  require_validation_evidence: true
+  require_review_or_explicit_no_findings: true
+
+logging:
+  enabled: true
+  format: jsonl
+  directory: runtime/loop-logs
+  session_file_pattern: "{date}-{session_id}.jsonl"
+  include_fields:
+    - timestamp
+    - session_id
+    - turn_id
+    - event
+    - stage
+    - status
+    - summary
+    - artifacts
+    - changed_files
+    - tests
+    - risks
+    - next_step
+    - approval
+
+customization:
+  allow_extra_docs: true
+  allow_stage_injection: true
+  allow_project_specific_output_contracts: true
