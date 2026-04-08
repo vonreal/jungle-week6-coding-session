@@ -57,4 +57,9 @@
 - `input_blank_lines_are_ignored`
 - `input_whitespace_around_statements_is_ignored`
 - `input_multiple_statements_in_one_line`
-4. 문장별 실행 루프 이후 단계(파싱 오류, INSERT, SELECT, 종료코드 집계)는 다음 테스트 단계에서 추가 예정입니다.
+4. 문장별 실행 루프 단계는 [run_parse_tests.sh](/Users/nako/jungle/wed_coding_session/jungle-week6-coding-session/member-jiun/tests/parse/run_parse_tests.sh)에서 검증합니다.
+- `parse_supported_keywords_case_insensitive`
+- `parse_invalid_statement_reports_error`
+- `parse_invalid_query_continues_to_next_statement`
+- `parse_multiple_invalid_statements_report_per_statement`
+5. INSERT/SELECT 상세 처리(테이블/컬럼 검증, 저장/조회 포맷)는 다음 테스트 단계에서 추가 예정입니다.

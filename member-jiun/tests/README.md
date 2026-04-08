@@ -6,6 +6,7 @@
 - `cli/`: CLI/프로세스 동작 검증
 - `init/`: 초기화(스키마 로드/스토리지 준비) 검증
 - `input/`: SQL 입력 정리/문장 분리 검증
+- `parse/`: 문장별 파싱/에러 지속 실행 검증
 - `fixtures/`: 테스트 입력 파일들
 
 ## 현재 범위 (요구사항 v1 기준)
@@ -20,6 +21,7 @@
 ./member-jiun/tests/cli/run_cli_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/init/run_init_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/input/run_input_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/parse/run_parse_tests.sh ./member-jiun/src/sql_processor
 ```
 
 ## 포함 케이스 (CLI)
@@ -47,3 +49,9 @@
 - 문자열 내부 `;` 처리
 - Windows CRLF 개행 처리
 - 멀티라인 SQL 문장 처리
+
+## 포함 케이스 (파싱/실행 루프)
+- `INSERT`/`SELECT` 키워드 대소문자 비구분 파싱
+- 비지원 문장 `invalid query` 처리
+- 파싱 에러 후 다음 문장 계속 실행
+- 다중 파싱 에러의 문장 단위 출력
