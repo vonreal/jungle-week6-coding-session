@@ -4,8 +4,8 @@
 #include "ast.h"
 
 /*
- * 하나의 SQL 문장 문자열을 파싱 결과 구조체로 옮긴다.
- * 이번 단계에서는 raw SQL 보관과 인터페이스 고정에 집중한다.
+ * 하나의 SQL 문장 문자열을 AST 구조체로 변환한다.
+ * INSERT 문장은 실제 필드를 채우고, 그 외 문장은 원문만 보관한다.
  */
 int parse_sql_statement(const char *sql_text, SqlStatement *statement);
 
