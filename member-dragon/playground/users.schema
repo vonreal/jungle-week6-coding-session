@@ -1,0 +1,8 @@
+{
+  "table": "users",
+  "columns": [
+    { "name": "name", "type": "string" },
+    { "name": "age", "type": "int" },
+    { "name": "major", "type": "string" }
+  ]
+}

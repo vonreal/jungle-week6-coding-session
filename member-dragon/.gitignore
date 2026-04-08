@@ -1,0 +1,4 @@
+playground/*.data
+playground/.tmp/
+src/*.o
+src/sql_processor

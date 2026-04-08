@@ -1,0 +1,8 @@
+{
+  "table": "products",
+  "columns": [
+    { "name": "name", "type": "string" },
+    { "name": "price", "type": "int" },
+    { "name": "category", "type": "string" }
+  ]
+}
