@@ -5,6 +5,7 @@
 ## 구조
 - `cli/`: CLI/프로세스 동작 검증
 - `init/`: 초기화(스키마 로드/스토리지 준비) 검증
+- `input/`: SQL 입력 정리/문장 분리 검증
 - `fixtures/`: 테스트 입력 파일들
 
 ## 현재 범위 (요구사항 v1 기준)
@@ -18,6 +19,7 @@
 ```bash
 ./member-jiun/tests/cli/run_cli_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/init/run_init_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/input/run_input_tests.sh ./member-jiun/src/sql_processor
 ```
 
 ## 포함 케이스 (CLI)
@@ -34,3 +36,8 @@
 - `products.schema` 누락 시 초기화 실패
 - 스키마 JSON 손상 시 초기화 실패
 - 스키마 읽기 권한 없음 시 초기화 실패
+
+## 포함 케이스 (입력 처리)
+- SQL 파일의 빈 줄 무시
+- 문장 앞뒤 공백/탭 무시
+- 한 줄 다중 문장(`;` 기준) 분리
