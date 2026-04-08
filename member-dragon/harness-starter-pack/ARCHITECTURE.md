@@ -26,7 +26,8 @@ flowchart TD
 
 ## 프로젝트 적용점
 
-- SQL 범위는 `INSERT`와 `SELECT`다.
+- SQL 범위는 `INSERT`, `SELECT`, `DELETE`, `UPDATE`다.
+- `SELECT`는 단일 `WHERE`, 단일 `ORDER BY`, `LIMIT`를 지원한다.
 - 스키마는 현재 작업 디렉토리의 `.schema` 파일에서 읽는다.
 - 데이터는 현재 작업 디렉토리의 `<table>.data` 파일에 저장하고 읽는다.
 - 에러는 exact string으로만 출력한다.

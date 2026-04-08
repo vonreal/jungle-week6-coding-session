@@ -18,7 +18,7 @@
 
 - `common/`은 읽기 전용이다.
 - 구현은 `member-dragon/src/` 안에서만 한다.
-- 현재 범위는 `INSERT`와 `SELECT` 처리다.
+- 현재 범위는 `INSERT`, `SELECT`, `DELETE`, `UPDATE`, 단일 `WHERE`, 단일 `ORDER BY`, `LIMIT` 처리다.
 - stderr 에러 문자열은 `common/docs/error-messages.md`의 exact string만 사용한다.
 - 검증은 `common/scripts/run_tests.sh`로 한다.
 - 주요 단계는 루프 로그에 남긴다.
