@@ -16,11 +16,11 @@
         <div>
           <p class="eyebrow">Week 6 Coding Session</p>
           <h1>Mini SQL Processor</h1>
-          <p class="subtitle">CLI 실행 흐름을 데모 보드로 표현했습니다.</p>
+          <p class="subtitle">로컬 API를 통해 실제 C 실행 파일을 호출하는 데모 보드입니다.</p>
         </div>
         <div class="badges">
           <span class="badge success">Public 6/6 PASS</span>
-          <span class="badge neutral">1조</span>
+          <span class="badge neutral">Live C Runtime</span>
         </div>
       </header>
 
@@ -66,24 +66,24 @@
 
         <section class="cache-panel">
           <div class="cache-head">
-            <h3>Cache 상태</h3>
+            <h3>Runtime 상태</h3>
           </div>
           <div class="cache-stats">
             <div class="cache-item">
-              <span class="cache-label">cache hit</span>
-              <strong id="cacheHit" class="cache-value">0</strong>
+              <span class="cache-label">api connection</span>
+              <strong id="runtimeConnection" class="cache-value">-</strong>
             </div>
             <div class="cache-item">
-              <span class="cache-label">cache miss</span>
-              <strong id="cacheMiss" class="cache-value">0</strong>
+              <span class="cache-label">binary status</span>
+              <strong id="runtimeBinary" class="cache-value">-</strong>
             </div>
             <div class="cache-item">
-              <span class="cache-label">dirty pages</span>
-              <strong id="dirtyPages" class="cache-value">0</strong>
+              <span class="cache-label">last exit code</span>
+              <strong id="runtimeExitCode" class="cache-value">-</strong>
             </div>
             <div class="cache-item">
-              <span class="cache-label">flush count</span>
-              <strong id="flushCount" class="cache-value">0</strong>
+              <span class="cache-label">runtime dir</span>
+              <strong id="runtimeDir" class="cache-value runtime-dir">-</strong>
             </div>
           </div>
         </section>
@@ -94,16 +94,16 @@
           </div>
           <div class="page-stats">
             <div class="page-item">
-              <p class="page-table">users</p>
+              <p class="page-table">users.data</p>
+              <p class="page-line">exists: <strong id="usersFileExists">no</strong></p>
               <p class="page-line">page count: <strong id="usersPageCount">0</strong></p>
-              <p class="page-line">row count: <strong id="usersRowCount">0</strong></p>
-              <p class="page-line">last page used_bytes: <strong id="usersLastUsedBytes">0</strong></p>
+              <p class="page-line">file size bytes: <strong id="usersFileSize">0</strong></p>
             </div>
             <div class="page-item">
-              <p class="page-table">products</p>
+              <p class="page-table">products.data</p>
+              <p class="page-line">exists: <strong id="productsFileExists">no</strong></p>
               <p class="page-line">page count: <strong id="productsPageCount">0</strong></p>
-              <p class="page-line">row count: <strong id="productsRowCount">0</strong></p>
-              <p class="page-line">last page used_bytes: <strong id="productsLastUsedBytes">0</strong></p>
+              <p class="page-line">file size bytes: <strong id="productsFileSize">0</strong></p>
             </div>
           </div>
         </section>

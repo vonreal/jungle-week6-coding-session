@@ -231,6 +231,11 @@ h1 {
   line-height: 1;
 }
 
+.runtime-dir {
+  font-size: 12px;
+  word-break: break-all;
+}
+
 .page-panel {
   margin-top: 12px;
   border: 1px solid #edf0f5;
