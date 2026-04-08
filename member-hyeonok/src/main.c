@@ -31,6 +31,7 @@ static int process_sql_file(const char *sql_path)
     for (index = 0; index < statements.count; index++) {
         SqlStatement statement;
         ParseResult parse_result;
+        ExecuteResult execute_result;
 
         /*
          * 빈 문장은 splitter 단계에서 제거되므로,
@@ -51,7 +52,17 @@ static int process_sql_file(const char *sql_path)
             continue;
         }
 
-        if (!execute_sql_statement(&statement)) {
+        execute_result = execute_sql_statement(&statement);
+        if (execute_result != EXECUTE_SUCCESS) {
+            if (execute_result == EXECUTE_INVALID_QUERY) {
+                fprintf(stderr, "ERROR: invalid query\n");
+            } else if (execute_result == EXECUTE_TABLE_NOT_FOUND) {
+                fprintf(stderr, "ERROR: table not found\n");
+            } else if (execute_result == EXECUTE_COLUMN_COUNT_MISMATCH) {
+                fprintf(stderr, "ERROR: column count does not match value count\n");
+            } else {
+                fprintf(stderr, "ERROR: file open failed\n");
+            }
             had_error = 1;
         }
 
