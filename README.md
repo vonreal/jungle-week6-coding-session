@@ -33,10 +33,10 @@ make
 
 ## 팀원별 구현
 각 팀원의 구현과 산출물은 아래 폴더에서 확인 가능.
-- `jihyun/`
-- `hyeonok/`
-- `dragon/`
-- `jiun/`
+- `member-jihyun/`
+- `member-hyeonok/`
+- `member-dragon/`
+- `member-jiun/`
 - `prompts.md` — AI 활용 이력
 - `decisions.md` — 설계 판단 기록
 - `trouble.md` — 삽질 및 해결 과정
