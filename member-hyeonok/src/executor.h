@@ -16,6 +16,12 @@ typedef enum ExecuteResult {
  * 현재 단계에서는 INSERT 저장 로직을 실제로 수행하고,
  * 이후 호출부가 표준 에러 문구로 매핑할 수 있는 결과 코드를 돌려준다.
  */
+ExecuteResult execute_query(const SqlStatement *statement);
+
+/*
+ * 기존 이름을 쓰는 호출부와의 호환을 위해 남겨둔 래퍼다.
+ * 내부적으로는 execute_query()를 호출한다.
+ */
 ExecuteResult execute_sql_statement(const SqlStatement *statement);
 
 #endif

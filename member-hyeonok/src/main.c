@@ -6,6 +6,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void print_parse_error(ParseResult parse_result)
+{
+    /*
+     * 파서는 표준 출력에 관여하지 않고 결과 코드만 돌려준다.
+     * 사용자에게 보여줄 에러 문구 선택은 main 이 한곳에서 담당한다.
+     */
+    if (parse_result == PARSE_INVALID_QUERY) {
+        fprintf(stderr, "ERROR: invalid query\n");
+    } else {
+        fprintf(stderr, "ERROR: file open failed\n");
+    }
+}
+
+static void print_execute_error(ExecuteResult execute_result)
+{
+    /*
+     * executor 역시 stdout 결과만 책임지고, stderr 문구 결정은 호출부에서 맡는다.
+     * 이렇게 분리해 두면 다음 단계에서 에러 정책을 바꿔도 executor 내부를 건드릴 일이 줄어든다.
+     */
+    if (execute_result == EXECUTE_INVALID_QUERY) {
+        fprintf(stderr, "ERROR: invalid query\n");
+    } else if (execute_result == EXECUTE_TABLE_NOT_FOUND) {
+        fprintf(stderr, "ERROR: table not found\n");
+    } else if (execute_result == EXECUTE_COLUMN_COUNT_MISMATCH) {
+        fprintf(stderr, "ERROR: column count does not match value count\n");
+    } else {
+        fprintf(stderr, "ERROR: file open failed\n");
+    }
+}
+
 static int process_sql_file(const char *sql_path)
 {
     char *sql_text;
@@ -39,30 +69,14 @@ static int process_sql_file(const char *sql_path)
          */
         parse_result = parse_query(statements.items[index], &statement);
         if (parse_result != PARSE_SUCCESS) {
-            /*
-             * 문법 오류와 내부 오류를 호출부에서 구분할 수 있게 해 두고,
-             * 현재 단계에서는 팀 공통 규칙에 맞는 표준 에러 문구로 연결한다.
-             */
-            if (parse_result == PARSE_INVALID_QUERY) {
-                fprintf(stderr, "ERROR: invalid query\n");
-            } else {
-                fprintf(stderr, "ERROR: file open failed\n");
-            }
+            print_parse_error(parse_result);
             had_error = 1;
             continue;
         }
 
-        execute_result = execute_sql_statement(&statement);
+        execute_result = execute_query(&statement);
         if (execute_result != EXECUTE_SUCCESS) {
-            if (execute_result == EXECUTE_INVALID_QUERY) {
-                fprintf(stderr, "ERROR: invalid query\n");
-            } else if (execute_result == EXECUTE_TABLE_NOT_FOUND) {
-                fprintf(stderr, "ERROR: table not found\n");
-            } else if (execute_result == EXECUTE_COLUMN_COUNT_MISMATCH) {
-                fprintf(stderr, "ERROR: column count does not match value count\n");
-            } else {
-                fprintf(stderr, "ERROR: file open failed\n");
-            }
+            print_execute_error(execute_result);
             had_error = 1;
         }
 

@@ -487,7 +487,7 @@ static ExecuteResult execute_select_statement(const SelectStatement *select)
     return result;
 }
 
-ExecuteResult execute_sql_statement(const SqlStatement *statement)
+ExecuteResult execute_query(const SqlStatement *statement)
 {
     if (statement == NULL) {
         return EXECUTE_FILE_ERROR;
@@ -502,4 +502,9 @@ ExecuteResult execute_sql_statement(const SqlStatement *statement)
     }
 
     return EXECUTE_INVALID_QUERY;
+}
+
+ExecuteResult execute_sql_statement(const SqlStatement *statement)
+{
+    return execute_query(statement);
 }
