@@ -1,7 +1,9 @@
 #include "executor.h"
 
 #include "schema.h"
+#include "util.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -166,6 +168,325 @@ static ExecuteResult execute_insert_statement(const InsertStatement *insert)
     return result;
 }
 
+static int *build_select_column_indexes(
+    const SelectStatement *select,
+    const Schema *schema,
+    size_t *selected_count,
+    ExecuteResult *result
+)
+{
+    int *indexes;
+    size_t index;
+    int found_index;
+
+    if (select->select_all) {
+        indexes = (int *)malloc(sizeof(int) * schema->column_count);
+        if (indexes == NULL) {
+            *result = EXECUTE_FILE_ERROR;
+            return NULL;
+        }
+
+        for (index = 0; index < schema->column_count; index++) {
+            indexes[index] = (int)index;
+        }
+
+        *selected_count = schema->column_count;
+        *result = EXECUTE_SUCCESS;
+        return indexes;
+    }
+
+    indexes = (int *)malloc(sizeof(int) * select->column_count);
+    if (indexes == NULL) {
+        *result = EXECUTE_FILE_ERROR;
+        return NULL;
+    }
+
+    for (index = 0; index < select->column_count; index++) {
+        found_index = find_schema_column_index(schema, select->columns[index]);
+        if (found_index < 0) {
+            free(indexes);
+            *result = EXECUTE_INVALID_QUERY;
+            return NULL;
+        }
+        indexes[index] = found_index;
+    }
+
+    *selected_count = select->column_count;
+    *result = EXECUTE_SUCCESS;
+    return indexes;
+}
+
+static int parse_escaped_field(const char **cursor, char **out_text)
+{
+    size_t capacity;
+    size_t length;
+    char *buffer;
+    char current;
+
+    capacity = 16;
+    length = 0;
+    buffer = (char *)malloc(capacity);
+    if (buffer == NULL) {
+        return 0;
+    }
+
+    while (**cursor != '\0' && **cursor != '\t' && **cursor != '\n') {
+        current = **cursor;
+        (*cursor)++;
+
+        if (current == '\\') {
+            if (**cursor == '\0') {
+                free(buffer);
+                return 0;
+            }
+
+            current = **cursor;
+            (*cursor)++;
+
+            if (current == 't') {
+                current = '\t';
+            } else if (current == 'n') {
+                current = '\n';
+            } else if (current == '\\') {
+                current = '\\';
+            } else {
+                free(buffer);
+                return 0;
+            }
+        }
+
+        if (length + 1 >= capacity) {
+            char *new_buffer;
+
+            capacity *= 2;
+            new_buffer = (char *)realloc(buffer, capacity);
+            if (new_buffer == NULL) {
+                free(buffer);
+                return 0;
+            }
+            buffer = new_buffer;
+        }
+
+        buffer[length] = current;
+        length++;
+    }
+
+    buffer[length] = '\0';
+    *out_text = buffer;
+    return 1;
+}
+
+static int parse_data_row(
+    const char *line_start,
+    size_t expected_count,
+    char ***out_fields
+)
+{
+    const char *cursor;
+    char **fields;
+    size_t index;
+
+    cursor = line_start;
+    fields = (char **)calloc(expected_count, sizeof(char *));
+    if (fields == NULL) {
+        return 0;
+    }
+
+    for (index = 0; index < expected_count; index++) {
+        if (!parse_escaped_field(&cursor, &fields[index])) {
+            free_string_array(fields, expected_count);
+            return 0;
+        }
+
+        if (index + 1 < expected_count) {
+            if (*cursor != '\t') {
+                free_string_array(fields, expected_count);
+                return 0;
+            }
+            cursor++;
+        }
+    }
+
+    if (*cursor != '\0' && *cursor != '\n') {
+        free_string_array(fields, expected_count);
+        return 0;
+    }
+
+    *out_fields = fields;
+    return 1;
+}
+
+static int print_selected_header(
+    const SelectStatement *select,
+    const Schema *schema,
+    const int *indexes,
+    size_t selected_count
+)
+{
+    size_t index;
+
+    for (index = 0; index < selected_count; index++) {
+        if (index > 0 && fputc(',', stdout) == EOF) {
+            return 0;
+        }
+
+        if (select->select_all) {
+            if (fputs(schema->columns[indexes[index]].name, stdout) == EOF) {
+                return 0;
+            }
+        } else {
+            if (fputs(select->columns[index], stdout) == EOF) {
+                return 0;
+            }
+        }
+    }
+
+    return fputc('\n', stdout) != EOF;
+}
+
+static int print_selected_row(
+    char **fields,
+    const int *indexes,
+    size_t selected_count
+)
+{
+    size_t index;
+
+    for (index = 0; index < selected_count; index++) {
+        if (index > 0 && fputc(',', stdout) == EOF) {
+            return 0;
+        }
+
+        if (fputs(fields[indexes[index]], stdout) == EOF) {
+            return 0;
+        }
+    }
+
+    return fputc('\n', stdout) != EOF;
+}
+
+static ExecuteResult execute_select_statement(const SelectStatement *select)
+{
+    Schema schema;
+    SchemaLoadResult schema_result;
+    char path_buffer[512];
+    FILE *file;
+    char *data_text;
+    char *cursor;
+    int *selected_indexes;
+    size_t selected_count;
+    int printed_header;
+    ExecuteResult result;
+
+    schema_result = load_schema_for_table(select->table_name, &schema);
+    if (schema_result == SCHEMA_LOAD_TABLE_NOT_FOUND) {
+        return EXECUTE_TABLE_NOT_FOUND;
+    }
+
+    if (schema_result != SCHEMA_LOAD_SUCCESS) {
+        return EXECUTE_FILE_ERROR;
+    }
+
+    selected_indexes = build_select_column_indexes(
+        select,
+        &schema,
+        &selected_count,
+        &result
+    );
+    if (selected_indexes == NULL) {
+        free_schema(&schema);
+        return result;
+    }
+
+    if (snprintf(path_buffer, sizeof(path_buffer), "%s.data", select->table_name) >=
+        (int)sizeof(path_buffer)) {
+        free(selected_indexes);
+        free_schema(&schema);
+        return EXECUTE_FILE_ERROR;
+    }
+
+    file = fopen(path_buffer, "rb");
+    if (file == NULL) {
+        free(selected_indexes);
+        free_schema(&schema);
+        if (errno == ENOENT) {
+            return EXECUTE_SUCCESS;
+        }
+        return EXECUTE_FILE_ERROR;
+    }
+    fclose(file);
+
+    data_text = read_entire_file(path_buffer);
+    if (data_text == NULL) {
+        free(selected_indexes);
+        free_schema(&schema);
+        return EXECUTE_FILE_ERROR;
+    }
+
+    printed_header = 0;
+    result = EXECUTE_SUCCESS;
+    cursor = data_text;
+
+    while (*cursor != '\0') {
+        char *line_start;
+        char *line_end;
+        char saved_char;
+        char **fields;
+
+        line_start = cursor;
+        line_end = strchr(cursor, '\n');
+        if (line_end == NULL) {
+            line_end = cursor + strlen(cursor);
+            saved_char = *line_end;
+        } else {
+            saved_char = *line_end;
+            *line_end = '\0';
+        }
+
+        /*
+         * 빈 데이터 파일이거나 마지막 빈 줄은 출력 없이 건너뛴다.
+         * 실제 row가 하나라도 있을 때만 헤더를 먼저 출력한다.
+         */
+        if (*line_start != '\0') {
+            if (!parse_data_row(line_start, schema.column_count, &fields)) {
+                result = EXECUTE_FILE_ERROR;
+            } else {
+                if (!printed_header) {
+                    if (!print_selected_header(select, &schema, selected_indexes, selected_count)) {
+                        free_string_array(fields, schema.column_count);
+                        result = EXECUTE_FILE_ERROR;
+                    } else {
+                        printed_header = 1;
+                    }
+                }
+
+                if (result == EXECUTE_SUCCESS &&
+                    !print_selected_row(fields, selected_indexes, selected_count)) {
+                    result = EXECUTE_FILE_ERROR;
+                }
+
+                free_string_array(fields, schema.column_count);
+            }
+        }
+
+        if (saved_char == '\n') {
+            *line_end = '\n';
+            cursor = line_end + 1;
+        } else {
+            cursor = line_end;
+        }
+
+        if (result != EXECUTE_SUCCESS) {
+            break;
+        }
+    }
+
+    free(data_text);
+    free(selected_indexes);
+    free_schema(&schema);
+    return result;
+}
+
 ExecuteResult execute_sql_statement(const SqlStatement *statement)
 {
     if (statement == NULL) {
@@ -176,12 +497,8 @@ ExecuteResult execute_sql_statement(const SqlStatement *statement)
         return execute_insert_statement(&statement->insert);
     }
 
-    /*
-     * SELECT 조회는 다음 단계에서 구현한다.
-     * 현재 단계에서는 INSERT 저장만 실제 동작 대상으로 본다.
-     */
     if (statement->type == SQL_STATEMENT_SELECT) {
-        return EXECUTE_SUCCESS;
+        return execute_select_statement(&statement->select);
     }
 
     return EXECUTE_INVALID_QUERY;
