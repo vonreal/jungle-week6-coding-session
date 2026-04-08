@@ -140,11 +140,44 @@ case_insert_error_does_not_stop_next_statements() {
   run_sql_and_assert "$sql" "$expected_out" "$expected_err" 1
 }
 
+case_insert_reorders_values_to_schema_order() {
+  local sql
+  sql=$'INSERT INTO users (age, major, name) VALUES (25, \'컴퓨터공학\', \'김민준\');\nSELECT * FROM users;\n'
+  local expected_out
+  expected_out=$'name,age,major\n김민준,25,컴퓨터공학\n'
+  local expected_err
+  expected_err=''
+  run_sql_and_assert "$sql" "$expected_out" "$expected_err" 0
+}
+
+case_insert_duplicate_column_is_invalid_query() {
+  local sql
+  sql=$'INSERT INTO users (name, age, name) VALUES (\'김민준\', 25, \'중복\');\n'
+  local expected_out
+  expected_out=''
+  local expected_err
+  expected_err=$'ERROR: invalid query\n'
+  run_sql_and_assert "$sql" "$expected_out" "$expected_err" 1
+}
+
+case_insert_invalid_int_literal_is_invalid_query() {
+  local sql
+  sql=$'INSERT INTO users (name, age, major) VALUES (\'김민준\', \'스물다섯\', \'컴퓨터공학\');\nINSERT INTO users (name, age, major) VALUES (\'이서연\', twenty, \'경영학\');\n'
+  local expected_out
+  expected_out=''
+  local expected_err
+  expected_err=$'ERROR: invalid query\nERROR: invalid query\n'
+  run_sql_and_assert "$sql" "$expected_out" "$expected_err" 1
+}
+
 run_case "insert_success_is_silent_and_appended" case_insert_success_is_silent_and_appended
 run_case "insert_table_not_found" case_insert_table_not_found
 run_case "insert_column_value_mismatch" case_insert_column_value_mismatch
 run_case "insert_preserves_spaces_and_comma_in_quoted_values" case_insert_preserves_spaces_and_comma_in_quoted_values
 run_case "insert_error_does_not_stop_next_statements" case_insert_error_does_not_stop_next_statements
+run_case "insert_reorders_values_to_schema_order" case_insert_reorders_values_to_schema_order
+run_case "insert_duplicate_column_is_invalid_query" case_insert_duplicate_column_is_invalid_query
+run_case "insert_invalid_int_literal_is_invalid_query" case_insert_invalid_int_literal_is_invalid_query
 
 echo ""
 echo "Total: $TOTAL, Pass: $PASS, Fail: $FAIL"

@@ -11,6 +11,9 @@
 - `insert/`: INSERT 실행/검증/에러 처리 검증
 - `select/`: SELECT 실행/출력/에러 처리 검증
 - `exit/`: 종료코드 집계/에러 출력 규칙 검증
+- `where/`: 단일 `WHERE` 조건 확장 검증
+- `order/`: `ORDER BY` 1컬럼 정렬 확장 검증
+- `logging/`: 실행 로그 파일 확장 검증
 
 ## 현재 범위 (요구사항 v1 기준)
 - 실행 형식: `./sql_processor <sql_file>`
@@ -29,6 +32,9 @@
 ./member-jiun/tests/insert/run_insert_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/select/run_select_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/exit/run_exit_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/where/run_where_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/order/run_order_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/logging/run_logging_tests.sh ./member-jiun/src/sql_processor
 ```
 
 ## 포함 케이스 (단위 테스트)
@@ -89,3 +95,20 @@
 - 에러 1건 이상 시 종료코드 `1`
 - 다중 에러 + 정상 문장 혼합 실행 시 계속 진행
 - 문장당 대표 에러 1개 출력
+
+## 포함 케이스 (WHERE 단일 조건)
+- 정수 조건 필터링
+- 문자열 조건 필터링
+- 잘못된 조건 컬럼 에러 처리
+- `WHERE` 에러 후 다음 문장 계속 실행
+
+## 포함 케이스 (ORDER BY 1컬럼)
+- 기본 오름차순 정렬
+- 출력 컬럼과 다른 정렬 기준 사용
+- 잘못된 정렬 컬럼 에러 처리
+- `ORDER BY` 에러 후 다음 문장 계속 실행
+
+## 포함 케이스 (실행 로그 파일)
+- 성공 실행 시 로그 파일 생성
+- 실패 실행 시 오류 로그 기록
+- 여러 번 실행해도 로그 append 유지

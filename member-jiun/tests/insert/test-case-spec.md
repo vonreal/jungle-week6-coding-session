@@ -51,3 +51,33 @@
   - 종료코드 `1`
   - `stderr`는 실패한 첫 문장에 대한 에러 1줄
   - `stdout`은 후속 성공 INSERT 결과만 포함
+
+## 6) `insert_reorders_values_to_schema_order`
+- 시나리오:
+  - 컬럼 순서를 스키마와 다르게 지정한 INSERT 후 `SELECT *`를 수행합니다.
+- 의도:
+  - 입력 컬럼 순서와 무관하게 내부 저장은 스키마 순서로 정렬되는지 확인합니다.
+- 검사:
+  - 종료코드 `0`
+  - `stderr` 비어 있음
+  - `stdout`에서 `name,age,major` 순서로 올바른 값이 출력됨
+
+## 7) `insert_duplicate_column_is_invalid_query`
+- 시나리오:
+  - 같은 컬럼명을 두 번 지정한 INSERT를 수행합니다.
+- 의도:
+  - 중복 컬럼 지정이 허용되지 않고 `invalid query`로 처리되는지 확인합니다.
+- 검사:
+  - 종료코드 `1`
+  - `stdout` 비어 있음
+  - `stderr`가 `ERROR: invalid query`와 정확히 일치
+
+## 8) `insert_invalid_int_literal_is_invalid_query`
+- 시나리오:
+  - `int` 타입 컬럼에 따옴표 문자열과 숫자가 아닌 식별자 값을 각각 넣습니다.
+- 의도:
+  - 타입 검증에서 숫자가 아닌 값이 `invalid query`로 거절되는지 확인합니다.
+- 검사:
+  - 종료코드 `1`
+  - `stdout` 비어 있음
+  - `stderr`에 `ERROR: invalid query`가 문장 수만큼 출력됨
