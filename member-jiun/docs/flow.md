@@ -70,3 +70,11 @@
 - `insert_preserves_spaces_and_comma_in_quoted_values`
 - `insert_error_does_not_stop_next_statements`
 6. SELECT 상세 처리와 종료코드 집계 세부 시나리오는 다음 테스트 단계에서 추가 예정입니다.
+6. SELECT 처리 단계는 [run_select_tests.sh](/Users/nako/jungle/wed_coding_session/jungle-week6-coding-session/member-jiun/tests/select/run_select_tests.sh)에서 검증합니다.
+- `select_star_outputs_header_and_rows`
+- `select_specific_columns_in_requested_order`
+- `select_empty_table_is_silent`
+- `select_invalid_column_reports_invalid_query`
+- `select_table_not_found`
+- `select_error_does_not_stop_next_statement`
+7. 종료코드 집계 전용 세부 시나리오는 다음 테스트 단계에서 추가 예정입니다.

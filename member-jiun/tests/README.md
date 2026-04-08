@@ -8,6 +8,7 @@
 - `input/`: SQL 입력 정리/문장 분리 검증
 - `parse/`: 문장별 파싱/에러 지속 실행 검증
 - `insert/`: INSERT 실행/검증/에러 처리 검증
+- `select/`: SELECT 실행/출력/에러 처리 검증
 - `fixtures/`: 테스트 입력 파일들
 
 ## 현재 범위 (요구사항 v1 기준)
@@ -24,6 +25,7 @@
 ./member-jiun/tests/input/run_input_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/parse/run_parse_tests.sh ./member-jiun/src/sql_processor
 ./member-jiun/tests/insert/run_insert_tests.sh ./member-jiun/src/sql_processor
+./member-jiun/tests/select/run_select_tests.sh ./member-jiun/src/sql_processor
 ```
 
 ## 포함 케이스 (CLI)
@@ -64,3 +66,11 @@
 - 컬럼/값 개수 불일치 에러
 - 값 내부 공백/쉼표 보존
 - INSERT 에러 후 다음 문장 계속 실행
+
+## 포함 케이스 (SELECT 처리)
+- `SELECT *` 헤더/행 출력
+- 특정 컬럼 선택 및 컬럼 순서 유지
+- 0건 조회 시 무출력
+- 잘못된 컬럼 조회 시 `invalid query`
+- 존재하지 않는 테이블 조회 시 `table not found`
+- SELECT 에러 후 다음 문장 계속 실행
