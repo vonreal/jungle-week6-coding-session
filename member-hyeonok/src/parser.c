@@ -15,6 +15,10 @@ static void initialize_statement(SqlStatement *statement)
     statement->insert.column_count = 0;
     statement->insert.values = NULL;
     statement->insert.value_count = 0;
+    statement->select.select_all = 0;
+    statement->select.table_name = NULL;
+    statement->select.columns = NULL;
+    statement->select.column_count = 0;
 }
 
 static void skip_spaces(const char **cursor)
@@ -120,6 +124,24 @@ static int append_column(InsertStatement *insert, char *column_name)
     insert->columns = new_columns;
     insert->columns[insert->column_count] = column_name;
     insert->column_count++;
+    return 1;
+}
+
+static int append_select_column(SelectStatement *select, char *column_name)
+{
+    char **new_columns;
+
+    new_columns = (char **)realloc(
+        select->columns,
+        sizeof(char *) * (select->column_count + 1)
+    );
+    if (new_columns == NULL) {
+        return 0;
+    }
+
+    select->columns = new_columns;
+    select->columns[select->column_count] = column_name;
+    select->column_count++;
     return 1;
 }
 
@@ -348,6 +370,82 @@ static int parse_insert_statement(const char *sql_text, SqlStatement *statement)
     return 1;
 }
 
+static int parse_select_list(const char **cursor, SelectStatement *select)
+{
+    char *column_name;
+
+    skip_spaces(cursor);
+    if (**cursor == '*') {
+        /*
+         * SELECT * 는 컬럼 배열을 채우지 않고 플래그만 세워서
+         * 이후 executor 가 스키마 전체 컬럼을 사용하게 만든다.
+         */
+        select->select_all = 1;
+        (*cursor)++;
+        return 1;
+    }
+
+    while (1) {
+        column_name = parse_identifier_token(cursor);
+        if (column_name == NULL) {
+            return 0;
+        }
+
+        if (!append_select_column(select, column_name)) {
+            free(column_name);
+            return 0;
+        }
+
+        skip_spaces(cursor);
+        if (**cursor == ',') {
+            (*cursor)++;
+            continue;
+        }
+
+        break;
+    }
+
+    return select->column_count > 0;
+}
+
+static int parse_select_statement(const char *sql_text, SqlStatement *statement)
+{
+    const char *cursor;
+    char *table_name;
+
+    cursor = sql_text;
+
+    /*
+     * 현재 단계에서는 SELECT * 와 SELECT 컬럼목록만 지원한다.
+     * WHERE, ORDER BY 같은 추가 문법은 일부러 받지 않는다.
+     */
+    if (!match_keyword(&cursor, "SELECT")) {
+        return 0;
+    }
+
+    if (!parse_select_list(&cursor, &statement->select)) {
+        return 0;
+    }
+
+    if (!match_keyword(&cursor, "FROM")) {
+        return 0;
+    }
+
+    table_name = parse_identifier_token(&cursor);
+    if (table_name == NULL) {
+        return 0;
+    }
+    statement->select.table_name = table_name;
+
+    skip_spaces(&cursor);
+    if (*cursor != '\0') {
+        return 0;
+    }
+
+    statement->type = SQL_STATEMENT_SELECT;
+    return 1;
+}
+
 int parse_sql_statement(const char *sql_text, SqlStatement *statement)
 {
     const char *cursor;
@@ -366,6 +464,16 @@ int parse_sql_statement(const char *sql_text, SqlStatement *statement)
     if (match_keyword(&cursor, "INSERT")) {
         cursor = sql_text;
         if (!parse_insert_statement(cursor, statement)) {
+            free_sql_statement(statement);
+            return 0;
+        }
+        return 1;
+    }
+
+    cursor = sql_text;
+    if (match_keyword(&cursor, "SELECT")) {
+        cursor = sql_text;
+        if (!parse_select_statement(cursor, statement)) {
             free_sql_statement(statement);
             return 0;
         }
@@ -402,6 +510,19 @@ void free_sql_statement(SqlStatement *statement)
     }
     statement->insert.values = NULL;
     statement->insert.value_count = 0;
+
+    free(statement->select.table_name);
+    statement->select.table_name = NULL;
+
+    if (statement->select.columns != NULL) {
+        for (index = 0; index < statement->select.column_count; index++) {
+            free(statement->select.columns[index]);
+        }
+        free(statement->select.columns);
+    }
+    statement->select.columns = NULL;
+    statement->select.column_count = 0;
+    statement->select.select_all = 0;
 
     free(statement->raw_sql);
     statement->raw_sql = NULL;

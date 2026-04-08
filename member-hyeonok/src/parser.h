@@ -5,7 +5,7 @@
 
 /*
  * 하나의 SQL 문장 문자열을 AST 구조체로 변환한다.
- * INSERT 문장은 실제 필드를 채우고, 그 외 문장은 원문만 보관한다.
+ * INSERT / SELECT 문장은 실제 필드를 채우고, 그 외 문장은 원문만 보관한다.
  */
 int parse_sql_statement(const char *sql_text, SqlStatement *statement);
 

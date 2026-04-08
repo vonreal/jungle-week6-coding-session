@@ -5,7 +5,8 @@
 
 typedef enum SqlStatementType {
     SQL_STATEMENT_UNCLASSIFIED = 0,
-    SQL_STATEMENT_INSERT = 1
+    SQL_STATEMENT_INSERT = 1,
+    SQL_STATEMENT_SELECT = 2
 } SqlStatementType;
 
 typedef enum SqlValueType {
@@ -27,10 +28,18 @@ typedef struct InsertStatement {
     size_t value_count;
 } InsertStatement;
 
+typedef struct SelectStatement {
+    int select_all;
+    char *table_name;
+    char **columns;
+    size_t column_count;
+} SelectStatement;
+
 typedef struct SqlStatement {
     SqlStatementType type;
     char *raw_sql;
     InsertStatement insert;
+    SelectStatement select;
 } SqlStatement;
 
 #endif
