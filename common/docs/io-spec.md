@@ -32,21 +32,31 @@ name,age,major
 
 ## 스키마 정의
 
-테이블은 미리 존재한다고 가정하므로, 스키마 파일로 정의한다.
+테이블은 미리 존재한다고 가정하므로, 스키마 파일(JSON 형식)로 정의한다.
 각 테이블의 스키마는 `common/schema/` 디렉토리에 위치한다.
 
 ```
 # schema/users.schema
-name:string
-age:int
-major:string
+{
+  "table": "users",
+  "columns": [
+    { "name": "name", "type": "string" },
+    { "name": "age", "type": "int" },
+    { "name": "major", "type": "string" }
+  ]
+}
 ```
 
 ```
 # schema/products.schema
-name:string
-price:int
-category:string
+{
+  "table": "products",
+  "columns": [
+    { "name": "name", "type": "string" },
+    { "name": "price", "type": "int" },
+    { "name": "category", "type": "string" }
+  ]
+}
 ```
 
 ## 종료 코드

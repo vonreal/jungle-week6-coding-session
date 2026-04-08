@@ -97,6 +97,7 @@ for sql_file in "$TEST_DIR"/*.sql; do
     # 스키마 파일 복사 (있으면)
     if [ -d "$SCHEMA_DIR" ]; then
         cp "$SCHEMA_DIR"/*.schema "$test_work/" 2>/dev/null || true
+        cp "$SCHEMA_DIR"/*.json "$test_work/" 2>/dev/null || true
     fi
     
     # SQL 파일 복사
