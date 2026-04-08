@@ -1,3 +1,4 @@
+#include "error.h"
 #include "executor.h"
 #include "parser.h"
 #include "sql_splitter.h"
@@ -6,41 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void print_parse_error(ParseResult parse_result)
-{
-    /*
-     * 파서는 표준 출력에 관여하지 않고 결과 코드만 돌려준다.
-     * 사용자에게 보여줄 에러 문구 선택은 main 이 한곳에서 담당한다.
-     */
-    if (parse_result == PARSE_INVALID_QUERY) {
-        fprintf(stderr, "ERROR: invalid query\n");
-    } else {
-        fprintf(stderr, "ERROR: file open failed\n");
-    }
-}
-
-static void print_execute_error(ExecuteResult execute_result)
-{
-    /*
-     * executor 역시 stdout 결과만 책임지고, stderr 문구 결정은 호출부에서 맡는다.
-     * 이렇게 분리해 두면 다음 단계에서 에러 정책을 바꿔도 executor 내부를 건드릴 일이 줄어든다.
-     */
-    if (execute_result == EXECUTE_INVALID_QUERY) {
-        fprintf(stderr, "ERROR: invalid query\n");
-    } else if (execute_result == EXECUTE_TABLE_NOT_FOUND) {
-        fprintf(stderr, "ERROR: table not found\n");
-    } else if (execute_result == EXECUTE_COLUMN_COUNT_MISMATCH) {
-        fprintf(stderr, "ERROR: column count does not match value count\n");
-    } else {
-        fprintf(stderr, "ERROR: file open failed\n");
-    }
-}
-
 static int run_single_statement(const char *sql_text)
 {
     SqlStatement statement;
     ParseResult parse_result;
     ExecuteResult execute_result;
+    AppError error;
 
     /*
      * 각 SQL 문장은 독립적으로 파싱/실행한다.
@@ -49,13 +21,15 @@ static int run_single_statement(const char *sql_text)
      */
     parse_result = parse_query(sql_text, &statement);
     if (parse_result != PARSE_SUCCESS) {
-        print_parse_error(parse_result);
+        error = app_error_from_parse_result(parse_result);
+        print_app_error(error);
         return 1;
     }
 
     execute_result = execute_query(&statement);
     if (execute_result != EXECUTE_SUCCESS) {
-        print_execute_error(execute_result);
+        error = app_error_from_execute_result(execute_result);
+        print_app_error(error);
         free_sql_statement(&statement);
         return 1;
     }
@@ -74,13 +48,13 @@ static int process_sql_file(const char *sql_path)
     /* 입력 SQL 파일을 통째로 읽은 뒤, 한 번만 분리해서 순서대로 처리한다. */
     sql_text = read_entire_file(sql_path);
     if (sql_text == NULL) {
-        fprintf(stderr, "ERROR: file open failed\n");
+        print_app_error(APP_ERROR_FILE_OPEN_FAILED);
         return 1;
     }
 
     if (!split_sql_statements(sql_text, &statements)) {
         free(sql_text);
-        fprintf(stderr, "ERROR: file open failed\n");
+        print_app_error(APP_ERROR_FILE_OPEN_FAILED);
         return 1;
     }
 
@@ -108,7 +82,7 @@ static int process_sql_file(const char *sql_path)
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
-        fprintf(stderr, "ERROR: invalid query\n");
+        print_app_error(APP_ERROR_INVALID_QUERY);
         return 1;
     }
 
