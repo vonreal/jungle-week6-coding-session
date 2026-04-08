@@ -6,4 +6,4 @@
 - `infrastructure/`: 파일 저장소, 스키마 로더 등 외부 의존 구현
 - `shared/`: 공통 유틸/에러 타입/상수
 
-의존 방향은 바깥(`interfaces`, `infrastructure`)에서 안쪽(`application`, `domain`)으로만 향한다.
+의존 방향은 바깥(`interfaces`, `infrastructure`)에서 안쪽(`application`, `domain`)으로만 향합니다.
